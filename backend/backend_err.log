@@ -1,0 +1,2 @@
+2026/09/18 14:19:05 ❌  MongoDB ping failed: server selection error: context deadline exceeded, current topology: { Type: ReplicaSetNoPrimary, Servers: [{ Addr: ac-b3nrrbe-shard-00-01.nsnrpzp.mongodb.net:27017, Type: Unknown, Last error: remote error: tls: internal error }, { Addr: ac-b3nrrbe-shard-00-02.nsnrpzp.mongodb.net:27017, Type: Unknown, Last error: remote error: tls: internal error }, { Addr: ac-b3nrrbe-shard-00-00.nsnrpzp.mongodb.net:27017, Type: Unknown, Last error: remote error: tls: internal error }, ] }
+exit status 1
