@@ -1,0 +1,42 @@
+/* ─── Corporate SaaS Theme — CSS custom properties ─────────────────────── */
+:root {
+  --bg:        #F8FAFC;   /* page background */
+  --surface:   #FFFFFF;   /* cards */
+  --surface-2: #F1F5F9;   /* hover / raised */
+  --border:    #E2E8F0;   /* 1px borders */
+  --text:      #0F172A;   /* primary text */
+  --text-dim:  #475569;   /* secondary text */
+
+  --navy:      #0B1220;   /* deep navy */
+  --accent:    #2563EB;   /* primary blue */
+  --accent-2:  #06B6D4;   /* cyan */
+  --accent-3:  #38BDF8;   /* sky blue */
+  --accent-4:  #93C5FD;   /* soft blue */
+  --success:   #16A34A;   /* live indicator */
+  --danger:    #DC2626;   /* errors */
+
+  --glow-lead: 0 20px 35px rgba(37, 99, 235, 0.12);
+  --ring-accent: rgba(37, 99, 235, 0.35);
+}
+
+::selection {
+  background: rgba(37, 99, 235, 0.12);
+  color: var(--text);
+}
+
+:focus-visible {
+  outline: 2px solid var(--ring-accent);
+  outline-offset: 2px;
+}
+
+a {
+  color: var(--accent);
+}
+
+a:hover {
+  color: var(--accent-2);
+}
+
+.glow-lead {
+  box-shadow: var(--glow-lead);
+}

@@ -1,0 +1,178 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import './globals.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Base Reset & Defaults ───────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(37, 99, 235, 0.08), transparent 32%),
+    radial-gradient(circle at bottom right, rgba(6, 182, 212, 0.08), transparent 28%),
+    var(--bg);
+  color: var(--text);
+  font-family: 'Inter', system-ui, sans-serif;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0));
+}
+
+/* ─── Shared UI Utility Classes ─────────────────────────────────────────── */
+@layer components {
+
+  .glass-panel {
+    @apply relative rounded-2xl border border-border bg-surface;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  }
+
+  .glass-panel:hover {
+    @apply bg-surface-2;
+    transform: translateY(-4px);
+    box-shadow: 0 18px 40px rgba(37,99,235,0.08);
+    border-color: rgba(37, 99, 235, 0.18);
+  }
+
+  /* Centered, scrollable overlay — avoids flex clipping when content is taller than the viewport */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 1rem;
+    display: flex;
+    justify-content: center;
+    align-items: safe center;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+
+  .modal-panel {
+    width: 100%;
+  }
+
+  .modal-backdrop .glass-panel:hover {
+    transform: none;
+    background: var(--surface);
+    box-shadow:
+      0 20px 60px color-mix(in srgb, var(--bg) 80%, transparent),
+      0 1px 0 color-mix(in srgb, var(--accent) 18%, transparent) inset,
+      0 0 0 1px color-mix(in srgb, var(--accent) 6%, transparent) inset;
+  }
+
+  .btn-neon {
+    @apply relative px-6 py-3 rounded-xl font-semibold text-sm tracking-wide overflow-hidden;
+    transition: all 0.25s ease;
+  }
+
+  .btn-neon::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0));
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    border-radius: inherit;
+  }
+
+  .btn-neon:hover::before { opacity: 1; }
+
+  .btn-neon:hover {
+    transform: translateY(-2px);
+  }
+
+  .btn-neon:active {
+    transform: translateY(0);
+  }
+
+  .btn-neon:focus-visible {
+    outline: 2px solid var(--ring-accent);
+    outline-offset: 2px;
+  }
+
+  .btn-neon-cyan,
+  .btn-neon-accent {
+    @apply btn-neon border border-transparent text-white;
+    background: linear-gradient(135deg, var(--accent), #1D4ED8);
+    box-shadow: 0 12px 24px rgba(37, 99, 235, 0.18);
+  }
+
+  .btn-neon-cyan:hover,
+  .btn-neon-accent:hover {
+    box-shadow: 0 18px 30px rgba(37, 99, 235, 0.2);
+  }
+
+  .btn-neon-purple,
+  .btn-neon-accent-2 {
+    @apply btn-neon border border-cyan-200 text-slate-800;
+    background: linear-gradient(135deg, rgba(6,182,212,0.12), rgba(59,130,246,0.08));
+    box-shadow: 0 10px 18px rgba(6, 182, 212, 0.1);
+  }
+
+  .btn-neon-purple:hover,
+  .btn-neon-accent-2:hover {
+    box-shadow: 0 16px 28px rgba(6, 182, 212, 0.14);
+  }
+
+  .btn-neon-magenta,
+  .btn-neon-accent-3 {
+    @apply btn-neon border border-sky-200 text-sky-700;
+    background: linear-gradient(135deg, rgba(14,165,233,0.12), rgba(14,165,233,0.04));
+    box-shadow: 0 10px 18px rgba(14, 165, 233, 0.08);
+  }
+
+  .btn-neon-magenta:hover,
+  .btn-neon-accent-3:hover {
+    box-shadow: 0 16px 28px rgba(14, 165, 233, 0.12);
+  }
+
+  .text-glow-cyan    { text-shadow: 0 0 10px color-mix(in srgb, var(--accent) 80%, transparent), 0 0 30px color-mix(in srgb, var(--accent) 40%, transparent); }
+  .text-glow-purple  { text-shadow: 0 0 10px color-mix(in srgb, var(--accent-2) 80%, transparent), 0 0 30px color-mix(in srgb, var(--accent-2) 40%, transparent); }
+  .text-glow-magenta { text-shadow: 0 0 10px color-mix(in srgb, var(--accent-3) 80%, transparent), 0 0 30px color-mix(in srgb, var(--accent-3) 40%, transparent); }
+
+  .progress-track {
+    @apply relative h-3 rounded-full overflow-hidden bg-surface-2;
+    box-shadow: inset 0 1px 4px color-mix(in srgb, var(--bg) 70%, transparent);
+  }
+
+  .live-badge {
+    @apply flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold text-success border border-success/30;
+    background: color-mix(in srgb, var(--success) 12%, transparent);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--success) 25%, transparent);
+  }
+
+  .divider-glow {
+    @apply w-full h-px;
+    background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent) 45%, transparent), transparent);
+  }
+}
+
+/* ─── Scrollbar Styling ───────────────────────────────────────────────────── */
+::-webkit-scrollbar        { width: 6px; }
+::-webkit-scrollbar-track  { background: var(--surface); }
+::-webkit-scrollbar-thumb  { background: color-mix(in srgb, var(--accent) 40%, var(--border)); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent); }
