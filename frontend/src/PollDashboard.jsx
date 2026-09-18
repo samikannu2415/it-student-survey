@@ -226,7 +226,7 @@ export default function PollDashboard() {
                 fontFamily: "'Orbitron', sans-serif",
               }}
             >
-              PULSEPOLL
+              LIVEPOLL
             </h1>
             <p className="text-[10px] text-slate-500 font-mono tracking-widest -mt-1 hidden sm:block">LIVE OPINIONS</p>
           </div>
@@ -446,7 +446,7 @@ export default function PollDashboard() {
 
       {/* ── Footer ─────────────────────────────────────────────────────── */}
       <footer className="mt-auto border-t border-border py-8 text-center text-xs text-dim font-mono">
-        <p>PULSEPOLL LIVE POLLING PLATFORM · REAL-TIME WEBSOCKET · REACT & GO</p>
+        <p>LIVEPOLL LIVE POLLING PLATFORM · REAL-TIME WEBSOCKET · REACT & GO</p>
       </footer>
 
       {/* ── Modals ─────────────────────────────────────────────────────── */}

@@ -202,7 +202,7 @@ export default function AuthModal({ initialMode = 'login', onClose }) {
                 backgroundImage: 'linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%)',
               }}
             >
-              PULSEPOLL
+              LIVEPOLL
             </h2>
             <p className="text-[10px] text-dim font-mono tracking-wider">
               {mode === 'login' ? 'ACCESS YOUR ACCOUNT' : mode === 'forgot' ? 'RESET YOUR PASSWORD' : 'JOIN THE COMMUNITY'}

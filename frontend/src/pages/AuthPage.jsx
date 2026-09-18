@@ -214,7 +214,7 @@ export default function AuthPage() {
             backgroundImage: 'linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 50%, var(--accent-3) 100%)',
           }}
         >
-          PULSEPOLL
+          LIVEPOLL
         </h1>
         <p className="text-xs text-dim font-mono tracking-widest mt-1">LIVE POLLING PLATFORM</p>
       </div>
