@@ -89,8 +89,6 @@ export default function GoogleAuthModal({ isOpen, onClose, onGoogleSignIn }) {
             width: 280,
           });
         }
-
-        window.google.accounts.id.prompt();
       } catch (err) {
         console.warn('Google GSI Init warning:', err);
       }

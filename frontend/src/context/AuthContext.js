@@ -54,50 +54,7 @@ export function AuthProvider({ children }) {
   const loginWithGoogle = useCallback(async (customProfile = null) => {
     const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
 
-    // 1. If Google Client ID is configured, trigger official Google OAuth Popup
-    if (clientId && window.google && window.google.accounts && window.google.accounts.oauth2) {
-      return new Promise((resolve, reject) => {
-        try {
-          const client = window.google.accounts.oauth2.initTokenClient({
-            client_id: clientId,
-            scope: 'email profile openid',
-            callback: async (tokenResponse) => {
-              if (tokenResponse && tokenResponse.access_token) {
-                try {
-                  const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-                    headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
-                  });
-                  const profile = await res.json();
-                  const googleUser = {
-                    id: profile.sub || 'google_' + Math.random().toString(36).substring(2, 10),
-                    email: profile.email,
-                    username: profile.name || profile.email.split('@')[0],
-                    avatar: profile.picture || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(profile.email)}`,
-                    provider: 'google',
-                    joinedAt: new Date().toISOString(),
-                  };
-                  localStorage.setItem(STORAGE_KEY, JSON.stringify(googleUser));
-                  setUser(googleUser);
-                  resolve(googleUser);
-                } catch (err) {
-                  reject(new Error('Failed to fetch Google profile: ' + err.message));
-                }
-              } else {
-                reject(new Error('Google sign-in was cancelled'));
-              }
-            },
-            error_callback: (error) => {
-              reject(new Error(error.message || 'Google OAuth failed'));
-            },
-          });
-          client.requestAccessToken();
-        } catch (err) {
-          reject(err);
-        }
-      });
-    }
-
-    // 2. If user passed custom profile directly
+    // 1. If a custom profile is passed directly, keep the existing local mock sign-in behavior.
     if (customProfile && customProfile.email) {
       const googleUser = {
         id: 'google_' + Math.random().toString(36).substring(2, 10),
@@ -112,8 +69,77 @@ export function AuthProvider({ children }) {
       return googleUser;
     }
 
-    // 3. If no Client ID configured
-    throw new Error('Please add REACT_APP_GOOGLE_CLIENT_ID in frontend/.env to enable real Google Login');
+    if (!clientId) {
+      throw new Error('Please add REACT_APP_GOOGLE_CLIENT_ID in frontend/.env to enable real Google Login');
+    }
+
+    if (!window.google || !window.google.accounts || !window.google.accounts.id) {
+      throw new Error('Google sign-in is still loading. Please try again in a moment.');
+    }
+
+    return new Promise((resolve, reject) => {
+      let settled = false;
+
+      const finish = (error, user) => {
+        if (settled) return;
+        settled = true;
+
+        if (error) {
+          reject(error);
+          return;
+        }
+
+        resolve(user);
+      };
+
+      try {
+        window.google.accounts.id.initialize({
+          client_id: clientId,
+          callback: (response) => {
+            if (!response || !response.credential) {
+              finish(new Error('Google sign-in was cancelled'));
+              return;
+            }
+
+            try {
+              const payload = JSON.parse(
+                decodeURIComponent(
+                  atob(response.credential.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))
+                    .split('')
+                    .map((char) => '%' + ('00' + char.charCodeAt(0).toString(16)).slice(-2))
+                    .join('')
+                )
+              );
+
+              const googleUser = {
+                id: payload.sub || 'google_' + Math.random().toString(36).substring(2, 10),
+                email: payload.email,
+                username: payload.name || payload.email.split('@')[0],
+                avatar: payload.picture || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(payload.email)}`,
+                provider: 'google',
+                joinedAt: new Date().toISOString(),
+              };
+
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(googleUser));
+              setUser(googleUser);
+              finish(null, googleUser);
+            } catch (err) {
+              finish(new Error('Failed to read Google profile information.'));
+            }
+          },
+          auto_select: false,
+          cancel_on_tap_outside: false,
+        });
+
+        window.google.accounts.id.prompt((notification) => {
+          if (notification && notification.isNotDisplayed()) {
+            finish(new Error('Google sign-in popup was blocked. Please try again with a direct click.'));
+          }
+        });
+      } catch (err) {
+        finish(err);
+      }
+    });
   }, []);
 
   const resetPassword = useCallback(async (email) => {
