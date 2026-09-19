@@ -26,6 +26,10 @@ func main() {
 	db.Connect()
 	defer db.Disconnect()
 
+	if err := db.SeedDemoPoll(); err != nil {
+		log.Fatalf("❌ Failed to seed demo poll: %v", err)
+	}
+
 	rdb.Connect()
 
 	// ── Background: Redis → WebSocket fan-out ─────────────────────────────────
@@ -62,10 +66,10 @@ func main() {
 	{
 		polls := api.Group("/polls")
 		{
-			polls.GET("", handlers.ListPolls)        // GET  /api/v1/polls
-			polls.POST("", handlers.CreatePoll)      // POST /api/v1/polls
-			polls.GET("/:id", handlers.GetPoll)      // GET  /api/v1/polls/:id
-			polls.POST("/vote", handlers.CastVote)   // POST /api/v1/polls/vote
+			polls.GET("", handlers.ListPolls)      // GET  /api/v1/polls
+			polls.POST("", handlers.CreatePoll)    // POST /api/v1/polls
+			polls.GET("/:id", handlers.GetPoll)    // GET  /api/v1/polls/:id
+			polls.POST("/vote", handlers.CastVote) // POST /api/v1/polls/vote
 		}
 	}
 

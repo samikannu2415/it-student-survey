@@ -94,17 +94,6 @@ function EmptyState({ onCreate }) {
   );
 }
 
-const DEMO_POLL = {
-  id: 'demo-poll-language-choice',
-  question: 'Which coding language would you choose if you could learn only ONE?',
-  options: [
-    { id: 'python', text: 'Python 🐍', votes: 0 },
-    { id: 'java', text: 'Java ☕', votes: 0 },
-    { id: 'cpp', text: 'C++ ⚡', votes: 0 },
-    { id: 'javascript', text: 'JavaScript 🌐', votes: 0 },
-  ],
-};
-
 // ─── Poll Dashboard Component ─────────────────────────────────────────────
 export default function PollDashboard() {
   const [polls, setPolls]               = useState([]);
@@ -122,11 +111,10 @@ export default function PollDashboard() {
   const fetchPolls = useCallback(async () => {
     try {
       const data = await listPolls();
-      const nextPolls = Array.isArray(data) && data.length > 0 ? data : [DEMO_POLL];
-      setPolls(nextPolls);
+      setPolls(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Failed to load polls:', err);
-      setPolls([DEMO_POLL]);
+      setPolls([]);
     } finally {
       setLoading(false);
     }

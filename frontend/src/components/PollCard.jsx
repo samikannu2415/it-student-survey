@@ -115,20 +115,6 @@ export default function PollCard({ poll, onVoted }) {
     setVoting(true);
 
     try {
-      if (localPoll?.id?.startsWith('demo-')) {
-        const updated = {
-          ...localPoll,
-          options: localPoll.options.map((opt) =>
-            opt.id === optionID ? { ...opt, votes: (opt.votes || 0) + 1 } : opt
-          ),
-        };
-        setLocalPoll(updated);
-        setVoted(optionID);
-        onVoted?.(updated);
-        toast.success('Vote cast! 🚀', { icon: '⚡' });
-        return;
-      }
-
       const updated = await castVote({ poll_id: localPoll.id, option_id: optionID });
       setLocalPoll(updated);
       setVoted(optionID);
