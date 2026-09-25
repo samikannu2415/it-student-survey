@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -185,6 +186,7 @@ func CreatePoll(c *gin.Context) {
 	for i := range poll.Options {
 		poll.Options[i].Votes = 0
 	}
+	poll.VotedUsers = []string{}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 8*time.Second)
 	defer cancel()
@@ -196,6 +198,33 @@ func CreatePoll(c *gin.Context) {
 
 	log.Printf("✨ New Poll Created in MongoDB: %s (ID: %s)", poll.Question, poll.ID.Hex())
 	c.JSON(http.StatusCreated, poll)
+}
+
+func resolveVoterKey(payload models.VotePayload, clientIP string) string {
+	if userID := strings.TrimSpace(payload.UserID); userID != "" {
+		return userID
+	}
+	if ipAddress := strings.TrimSpace(payload.IPAddress); ipAddress != "" {
+		return ipAddress
+	}
+	if clientIP != "" {
+		return clientIP
+	}
+	return ""
+}
+
+func buildVoteUpdate(payload models.VotePayload, voterKey string, pollID any, optionID string) (bson.M, bson.M) {
+	filter := bson.M{
+		"_id":          pollID,
+		"options.id":   optionID,
+		"voted_users": bson.M{"$ne": voterKey},
+	}
+	update := bson.M{
+		"$push": bson.M{"voted_users": voterKey},
+		"$inc":  bson.M{"options.$.votes": 1},
+		"$set":  bson.M{"updated_at": time.Now()},
+	}
+	return filter, update
 }
 
 // CastVote atomically increments the vote counter in MongoDB and broadcasts live via WebSocket.
@@ -212,38 +241,47 @@ func CastVote(c *gin.Context) {
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 8*time.Second)
-	defer cancel()
-
-	// Atomically increment option vote counter in MongoDB.
-	filter := bson.M{"_id": oid, "options.id": payload.OptionID}
-	update := bson.M{
-		"$inc": bson.M{"options.$.votes": 1},
-		"$set": bson.M{"updated_at": time.Now()},
-	}
-	if _, err = db.PollsCollection.UpdateOne(ctx, filter, update); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Vote recording failed: " + err.Error()})
+	voterKey := resolveVoterKey(payload, c.ClientIP())
+	if voterKey == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Unable to identify voter"})
 		return
 	}
 
-	// Fetch updated poll document.
+	ctx, cancel := context.WithTimeout(context.Background(), 8*time.Second)
+	defer cancel()
+
+	filter, update := buildVoteUpdate(payload, voterKey, oid, payload.OptionID)
+	result, err := db.PollsCollection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Vote recording failed: " + err.Error()})
+		return
+	}
+	if result.MatchedCount == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Poll or option not found"})
+		return
+	}
+	if result.ModifiedCount == 0 {
+		c.JSON(http.StatusForbidden, gin.H{"error": "You have already voted on this poll"})
+		return
+	}
+
+	// Fetch updated poll document after the atomic Mongo write succeeded.
 	var updated models.Poll
 	if err = db.PollsCollection.FindOne(ctx, bson.M{"_id": oid}).Decode(&updated); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Updated poll fetch failed"})
 		return
 	}
 
-	// Build the real-time event.
+	// Build the real-time event only after the MongoDB vote was successfully recorded.
 	event := models.PollUpdateEvent{
 		PollID:  payload.PollID,
 		Options: updated.Options,
 	}
 	eventJSON, _ := json.Marshal(event)
 
-	// 1. Broadcast via Redis Pub/Sub if enabled
-	_ = rdb.Publish(ctx, string(eventJSON))
-
-	// 2. Broadcast directly via WebSocket Hub (instant fan-out to all connected browsers)
+	if err = rdb.Publish(ctx, string(eventJSON)); err != nil {
+		log.Printf("⚠️ Redis publish failed after successful vote update: %v", err)
+	}
 	GlobalHub.Broadcast(eventJSON)
 
 	log.Printf("🗳️ Vote Cast on Poll %s for Option %s (Total votes on option: %d)", payload.PollID, payload.OptionID, getOptionVotes(updated, payload.OptionID))

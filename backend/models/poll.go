@@ -15,18 +15,21 @@ type PollOption struct {
 
 // Poll is the top-level document stored in MongoDB.
 type Poll struct {
-	ID        primitive.ObjectID `bson:"_id,omitempty" json:"id"`
-	Question  string             `bson:"question" json:"question"`
-	Options   []PollOption       `bson:"options" json:"options"`
-	IsActive  bool               `bson:"is_active" json:"is_active"`
-	CreatedAt time.Time          `bson:"created_at" json:"created_at"`
-	UpdatedAt time.Time          `bson:"updated_at" json:"updated_at"`
+	ID         primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	Question   string             `bson:"question" json:"question"`
+	Options    []PollOption       `bson:"options" json:"options"`
+	VotedUsers []string           `bson:"voted_users" json:"voted_users"`
+	IsActive   bool               `bson:"is_active" json:"is_active"`
+	CreatedAt  time.Time          `bson:"created_at" json:"created_at"`
+	UpdatedAt  time.Time          `bson:"updated_at" json:"updated_at"`
 }
 
 // VotePayload is what the frontend sends when casting a vote.
 type VotePayload struct {
 	PollID   string `json:"poll_id" binding:"required"`
 	OptionID string `json:"option_id" binding:"required"`
+	UserID   string `json:"user_id"`
+	IPAddress string `json:"ip_address"`
 }
 
 // PollUpdateEvent is broadcast over Redis Pub/Sub to all connected clients.
